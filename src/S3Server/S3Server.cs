@@ -12,7 +12,6 @@
     using WatsonWebserver;
     using WatsonWebserver.Core;
 
-
     /// <summary>
     /// S3 server.  
     /// Bucket names must not be in the hostname; they must be in the URL path. 
@@ -310,10 +309,11 @@
 
                                 if (_Settings.Logging.SignatureV4Validation && _Settings.Logger != null)
                                 {
+                                    _Settings.Logger(_Header + Environment.NewLine + result);
                                     _Settings.Logger(_Header + "signature validation:"
-                                        + " mode=" + payloadHashMode
+                                        + " provided=" + s3ctx.Request.Signature
                                         + " expected=" + result.Signature
-                                        + " provided=" + s3ctx.Request.Signature);
+                                        + " match=" + result.Signature.Equals(s3ctx.Request.Signature));
                                 }
 
                                 if (!result.Signature.Equals(s3ctx.Request.Signature))
