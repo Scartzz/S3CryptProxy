@@ -78,6 +78,11 @@
         public Func<S3Context, Task<Tagging>> ReadTagging { get; set; } = null;
 
         /// <summary>
+        /// Restore an archived object.
+        /// </summary>
+        public Func<S3Context, RestoreRequest, Task<RestoreObjectResult>> Restore { get; set; } = null;
+
+        /// <summary>
         /// Read an object's legal hold status.
         /// </summary>
         public Func<S3Context, Task<LegalHold>> ReadLegalHold { get; set; } = null;

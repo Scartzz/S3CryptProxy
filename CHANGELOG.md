@@ -2,6 +2,17 @@
 
 ## Current Version
 
+v7.1.x
+
+- Added `Object.Restore` callback for `POST /[bucket]/[key]?restore`
+- Added `RestoreRequest`, `RestoreObjectResult`, `RestoreStatus`, `GlacierJobParameters`, and `RestoreTierEnum`
+- `S3Object` and `ObjectMetadata` can now carry restore state, emitted as the `x-amz-restore` header on GET/HEAD
+- Added `x-amz-restore-output-path` support on restore responses
+- Added `ObjectAlreadyInActiveTierError` and `GlacierExpeditedRetrievalNotAvailable` error codes
+- Added restore coverage to automated, xUnit, compliance, and signature validation tests
+
+## Previous Versions
+
 v7.0.x
 
 - Watson 7.0.9 dependency update
@@ -14,8 +25,6 @@ v7.0.x
 - Added comprehensive test infrastructure (Test.Shared, Test.Xunit)
 - Fix UriFormatException when server is bound to wildcard hostname (*, +, 0.0.0.0)
 - Signature validation fail-closed, range 206, unwired ops return 501
-
-## Previous Versions
 
 v6.0.x
 

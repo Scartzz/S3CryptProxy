@@ -87,6 +87,12 @@
         [XmlElement(ElementName = "Owner")]
         public Owner Owner { get; set; } = new Owner();
 
+        /// <summary>
+        /// Restore status for archived objects, returned through the x-amz-restore response header.
+        /// </summary>
+        [XmlIgnore]
+        public RestoreStatus RestoreStatus { get; set; } = null;
+
         #endregion
 
         #region Private-Members

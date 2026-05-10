@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
@@ -38,6 +39,7 @@
         static Owner _Owner = new Owner("admin", "Administrator");
         static Grantee _Grantee = new Grantee("admin", "Administrator", null, "CanonicalUser", "admin@admin.com");
         static Tag _Tag = new Tag("key", "value");
+        static ConcurrentDictionary<string, RestoreStatus> _RestoreStatuses = new ConcurrentDictionary<string, RestoreStatus>(StringComparer.Ordinal);
 
         static string _SecretKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";
 
@@ -125,6 +127,7 @@
             _Server.Object.ReadRetention = ObjectReadRetention;
             _Server.Object.ReadRange = ObjectReadRange;
             _Server.Object.ReadTagging = ObjectReadTags;
+            _Server.Object.Restore = ObjectRestore;
             _Server.Object.Write = ObjectWrite;
             _Server.Object.WriteAcl = ObjectWriteAcl;
             _Server.Object.WriteLegalHold = ObjectWriteLegalHold;
@@ -502,6 +505,23 @@
         {
             Console.WriteLine("ObjectExists: " + ctx.Request.Bucket + "/" + ctx.Request.Key);
 
+            if (ctx.Request.Key == "archived-object.txt"
+                || ctx.Request.Key == "archived-in-progress.txt"
+                || ctx.Request.Key == "archived-restored.txt")
+            {
+                ObjectMetadata archived = new ObjectMetadata(
+                    ctx.Request.Key,
+                    DateTime.UtcNow,
+                    "6cd3556deb0da54bca060b4c39479839",
+                    13,
+                    _Owner,
+                    StorageClassEnum.GLACIER);
+
+                archived.ContentType = "text/plain";
+                archived.RestoreStatus = GetRestoreStatus(ctx.Request.Key);
+                return archived;
+            }
+
             if (!_RandomizeHeadResponses) return _ObjectMetadata;
 
             int val = _Random.Next(100);
@@ -512,6 +532,19 @@
         static async Task<S3Object> ObjectRead(S3Context ctx)
         {
             Console.WriteLine("ObjectRead: " + ctx.Request.Bucket + "/" + ctx.Request.Key);
+
+            if (ctx.Request.Key == "archived-object.txt"
+                || ctx.Request.Key == "archived-in-progress.txt"
+                || ctx.Request.Key == "archived-restored.txt")
+            {
+                RestoreStatus status = GetRestoreStatus(ctx.Request.Key);
+                if (status == null || status.OngoingRequest)
+                    throw new S3Exception(new Error(ErrorCode.InvalidObjectState));
+
+                S3Object archived = new S3Object(ctx.Request.Key, "1", true, DateTime.UtcNow, "6cd3556deb0da54bca060b4c39479839", 5, _Owner, "hello", "text/plain", StorageClassEnum.GLACIER);
+                archived.RestoreStatus = status;
+                return archived;
+            }
 
             return new S3Object("hello.txt", "1", true, DateTime.Now, "6cd3556deb0da54bca060b4c39479839", 13, new Owner("admin", "Administrator"), "Hello, world!", "text/plain");
         }
@@ -546,7 +579,7 @@
         {
             Console.WriteLine("ObjectReadRange: " + ctx.Request.Bucket + "/" + ctx.Request.Key);
 
-            S3Object s3obj = new S3Object("hello.txt", "1", true, DateTime.Now, "6cd3556deb0da54bca060b4c39479839", 13, new Owner("admin", "Administrator"), "Hello, world!", "text/plain");
+            S3Object s3obj = await ObjectRead(ctx).ConfigureAwait(false);
 
             string data = s3obj.DataString;
             data = data.Substring((int)ctx.Request.RangeStart, (int)((int)ctx.Request.RangeEnd - (int)ctx.Request.RangeStart));
@@ -572,6 +605,42 @@
             Tagging tagging = new Tagging(new TagSet(new List<Tag> { _Tag }));
 
             return tagging;
+        }
+
+        static async Task<RestoreObjectResult> ObjectRestore(S3Context ctx, RestoreRequest request)
+        {
+            Console.WriteLine("ObjectRestore: " + ctx.Request.Bucket + "/" + ctx.Request.Key);
+            Console.WriteLine(ctx.Request.DataAsString + Environment.NewLine);
+
+            if (ctx.Request.Key == "active-tier-object.txt")
+                throw new S3Exception(new Error(ErrorCode.ObjectAlreadyInActiveTierError));
+
+            if (ctx.Request.Key == "archived-in-progress.txt")
+                throw new S3Exception(new Error(ErrorCode.RestoreAlreadyInProgress));
+
+            if (ctx.Request.Key == "archived-restored.txt")
+            {
+                _RestoreStatuses[ctx.Request.Key] = new RestoreStatus
+                {
+                    OngoingRequest = false,
+                    ExpiryDate = DateTime.UtcNow.AddDays(request.Days.Value)
+                };
+
+                return new RestoreObjectResult
+                {
+                    AlreadyRestored = true
+                };
+            }
+
+            _RestoreStatuses[ctx.Request.Key] = new RestoreStatus
+            {
+                OngoingRequest = true
+            };
+
+            return new RestoreObjectResult
+            {
+                AlreadyRestored = false
+            };
         }
 
         static async Task ObjectWrite(S3Context ctx)
@@ -726,6 +795,31 @@
         private static void Logger(string msg)
         {
             Console.WriteLine(msg);
+        }
+
+        private static RestoreStatus GetRestoreStatus(string key)
+        {
+            if (_RestoreStatuses.TryGetValue(key, out RestoreStatus status))
+                return status;
+
+            if (key == "archived-in-progress.txt")
+            {
+                return new RestoreStatus
+                {
+                    OngoingRequest = true
+                };
+            }
+
+            if (key == "archived-restored.txt")
+            {
+                return new RestoreStatus
+                {
+                    OngoingRequest = false,
+                    ExpiryDate = DateTime.UtcNow.AddDays(2)
+                };
+            }
+
+            return null;
         }
 
         #endregion

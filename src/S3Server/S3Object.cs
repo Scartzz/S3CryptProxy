@@ -91,6 +91,11 @@
         public Owner Owner { get; set; } = new Owner();
 
         /// <summary>
+        /// Restore status for archived objects, returned through the x-amz-restore response header.
+        /// </summary>
+        public RestoreStatus RestoreStatus { get; set; } = null;
+
+        /// <summary>
         /// Stream containing data.
         /// </summary>
         public Stream Data

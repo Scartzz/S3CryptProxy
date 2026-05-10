@@ -328,6 +328,27 @@ namespace Test.Shared.Tests
                 AssertHelper.IsTrue(response.ContentLength >= 0, "content-length is non-negative");
             }, token).ConfigureAwait(false);
 
+            await runner.RunTestAsync("HeadObject for restored archive includes x-amz-restore header", async (ct) =>
+            {
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, server.BaseUrl + "/" + server.Bucket + "/archived-restored.txt");
+                HttpResponseMessage response = await server.HttpClient.SendAsync(request, ct).ConfigureAwait(false);
+                AssertHelper.StatusCodeEquals(HttpStatusCode.OK, response, "HEAD restored archive");
+
+                string restoreHeader = null;
+                if (response.Headers.Contains("x-amz-restore"))
+                {
+                    foreach (string value in response.Headers.GetValues("x-amz-restore"))
+                    {
+                        restoreHeader = value;
+                        break;
+                    }
+                }
+
+                AssertHelper.IsNotNull(restoreHeader, "x-amz-restore header");
+                AssertHelper.StringContains(restoreHeader, "ongoing-request=\"false\"", "restore header ongoing-request");
+                AssertHelper.StringContains(restoreHeader, "expiry-date=", "restore header expiry-date");
+            }, token).ConfigureAwait(false);
+
             #endregion
 
             #region DeleteMultiple-XML

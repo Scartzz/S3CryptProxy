@@ -72,6 +72,19 @@ namespace Test.Shared.Tests
                 AssertHelper.StatusCodeEquals(200, (int)response.HttpStatusCode, "HeadObject");
             }, token).ConfigureAwait(false);
 
+            await runner.RunTestAsync("Valid signature allows RestoreObject", async (ct) =>
+            {
+                RestoreObjectResponse response = await server.S3Client.RestoreObjectAsync(new RestoreObjectRequest
+                {
+                    BucketName = server.Bucket,
+                    Key = "archived-object.txt",
+                    Days = 2
+                }, ct).ConfigureAwait(false);
+
+                AssertHelper.IsNotNull(response, "response");
+                AssertHelper.StatusCodeEquals(202, (int)response.HttpStatusCode, "RestoreObject");
+            }, token).ConfigureAwait(false);
+
             await runner.RunTestAsync("Valid signature allows DeleteObject", async (ct) =>
             {
                 DeleteObjectResponse response = await server.S3Client.DeleteObjectAsync(new DeleteObjectRequest

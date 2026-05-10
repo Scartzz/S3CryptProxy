@@ -14,6 +14,8 @@
         internal static string HeaderETag = "ETag";
         internal static string HeaderConnection = "Connection";
         internal static string HeaderAcceptRanges = "Accept-Ranges";
+        internal static string HeaderRestore = "x-amz-restore";
+        internal static string HeaderRestoreOutputPath = "x-amz-restore-output-path";
 
         internal static string ContentTypeXml = "application/xml";
         internal static string ContentTypeText = "text/plain";

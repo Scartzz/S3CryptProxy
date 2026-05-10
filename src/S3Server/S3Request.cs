@@ -327,6 +327,7 @@
                     || RequestType == S3RequestType.ObjectReadRange
                     || RequestType == S3RequestType.ObjectReadRetention
                     || RequestType == S3RequestType.ObjectReadTags
+                    || RequestType == S3RequestType.ObjectRestore
                     || RequestType == S3RequestType.ObjectWrite
                     || RequestType == S3RequestType.ObjectWriteAcl
                     || RequestType == S3RequestType.ObjectWriteLegalHold
@@ -413,6 +414,7 @@
                     case S3RequestType.ObjectDelete:
                     case S3RequestType.ObjectDeleteMultiple:
                     case S3RequestType.ObjectDeleteTags:
+                    case S3RequestType.ObjectRestore:
                     case S3RequestType.ObjectWrite:
                     case S3RequestType.ObjectWriteLegalHold:
                     case S3RequestType.ObjectWriteRetention:
@@ -1151,6 +1153,8 @@
 
                         if (!String.IsNullOrEmpty(Key))
                         {
+                            if (QuerystringExists("restore"))
+                                RequestType = S3RequestType.ObjectRestore;
                             if (QuerystringExists("select")
                                 && QuerystringExists("select-type")
                                 && RetrieveQueryValue("select-type").Equals("2"))

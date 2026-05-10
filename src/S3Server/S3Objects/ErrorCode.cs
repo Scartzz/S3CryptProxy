@@ -209,6 +209,13 @@
         InvalidObjectState,
 
         /// <summary>
+        /// Expedited retrievals are currently not available. Try again later.
+        /// </summary>
+        [EnumMember(Value = "GlacierExpeditedRetrievalNotAvailable")]
+        [XmlEnum(Name = "GlacierExpeditedRetrievalNotAvailable")]
+        GlacierExpeditedRetrievalNotAvailable,
+
+        /// <summary>
         /// One or more of the specified parts could not be found. The part might not have been uploaded, or the specified entity tag might not have matched the part's entity tag.
         /// </summary>
         [EnumMember(Value = "InvalidPart")]
@@ -452,6 +459,13 @@
         [EnumMember(Value = "NotSignedUp")]
         [XmlEnum(Name = "NotSignedUp")]
         NotSignedUp,
+
+        /// <summary>
+        /// This action is not allowed against this storage tier.
+        /// </summary>
+        [EnumMember(Value = "ObjectAlreadyInActiveTierError")]
+        [XmlEnum(Name = "ObjectAlreadyInActiveTierError")]
+        ObjectAlreadyInActiveTierError,
 
         /// <summary>
         /// A conflicting conditional operation is currently in progress against this resource. Try again.

@@ -86,6 +86,8 @@
                         return "The specified location constraint is not valid.";
                     case ErrorCode.InvalidObjectState:
                         return "The operation is not valid for the current state of the object.";
+                    case ErrorCode.GlacierExpeditedRetrievalNotAvailable:
+                        return "Expedited retrievals are currently not available. Try again later.";
                     case ErrorCode.InvalidPart:
                         return "One or more of the specified parts could not be found. The part might not have been uploaded, or the specified entity tag might not have matched the part's entity tag.";
                     case ErrorCode.InvalidPartOrder:
@@ -156,6 +158,8 @@
                         return "A header you provided implies functionality that is not implemented.";
                     case ErrorCode.NotSignedUp:
                         return "Your account is not signed up for the Amazon S3 service.";
+                    case ErrorCode.ObjectAlreadyInActiveTierError:
+                        return "This action is not allowed against this storage tier.";
                     case ErrorCode.OperationAborted:
                         return "A conflicting conditional operation is currently in progress against this resource. Try again.";
                     case ErrorCode.PermanentRedirect:
@@ -300,6 +304,8 @@
                         return 400;
                     case ErrorCode.InvalidObjectState:
                         return 403;
+                    case ErrorCode.GlacierExpeditedRetrievalNotAvailable:
+                        return 503;
                     case ErrorCode.InvalidPart:
                         return 400;
                     case ErrorCode.InvalidPartOrder:
@@ -369,6 +375,8 @@
                     case ErrorCode.NotImplemented:
                         return 501;
                     case ErrorCode.NotSignedUp:
+                        return 403;
+                    case ErrorCode.ObjectAlreadyInActiveTierError:
                         return 403;
                     case ErrorCode.OperationAborted:
                         return 409;

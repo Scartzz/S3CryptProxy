@@ -1,6 +1,7 @@
 namespace Test.Shared
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Net;
     using System.Net.Http;
@@ -77,6 +78,7 @@ namespace Test.Shared
         private bool _Disposed = false;
         private Owner _Owner = new Owner("admin", "Administrator");
         private Grantee _Grantee = new Grantee("admin", "Administrator", null, "CanonicalUser", "admin@admin.com");
+        private ConcurrentDictionary<string, RestoreStatus> _RestoreStatuses = new ConcurrentDictionary<string, RestoreStatus>(StringComparer.Ordinal);
 
         #endregion
 
@@ -376,12 +378,7 @@ namespace Test.Shared
                 if (ctx.Request.Key == "nonexistent-object-xyz.bin")
                     return null;
 
-                return new S3ServerLibrary.S3Objects.ObjectMetadata(
-                    ctx.Request.Key,
-                    DateTime.UtcNow,
-                    "6cd3556deb0da54bca060b4c39479839",
-                    13,
-                    _Owner);
+                return BuildObjectMetadata(ctx.Request.Key);
             };
 
             Server.Object.Read = async (ctx) =>
@@ -389,33 +386,18 @@ namespace Test.Shared
                 if (ctx.Request.Key == "nonexistent-object-xyz.bin")
                     return null;
 
-                return new S3ServerLibrary.S3Object(
-                    ctx.Request.Key,
-                    "1",
-                    true,
-                    DateTime.UtcNow,
-                    "5d41402abc4b2a76b9719d911017c592",
-                    5,
-                    _Owner,
-                    "hello",
-                    "text/plain");
+                return BuildObject(ctx.Request.Key);
             };
 
             Server.Object.ReadRange = async (ctx) =>
             {
+                S3Object obj = BuildObject(ctx.Request.Key);
                 string data = "hello";
                 string rangeData = data.Substring((int)ctx.Request.RangeStart, (int)((int)ctx.Request.RangeEnd - (int)ctx.Request.RangeStart + 1));
 
-                return new S3ServerLibrary.S3Object(
-                    ctx.Request.Key,
-                    "1",
-                    true,
-                    DateTime.UtcNow,
-                    "5d41402abc4b2a76b9719d911017c592",
-                    rangeData.Length,
-                    _Owner,
-                    rangeData,
-                    "text/plain");
+                obj.Size = rangeData.Length;
+                obj.DataString = rangeData;
+                return obj;
             };
 
             Server.Object.ReadAcl = async (ctx) =>
@@ -440,6 +422,41 @@ namespace Test.Shared
 
             Server.Object.WriteTagging = async (ctx, tags) => { };
             Server.Object.DeleteTagging = async (ctx) => { };
+
+            Server.Object.Restore = async (ctx, request) =>
+            {
+                if (String.IsNullOrEmpty(ctx.Request.Key) || ctx.Request.Key == "nonexistent-object-xyz.bin")
+                    throw new S3Exception(new Error(ErrorCode.NoSuchKey));
+
+                if (ctx.Request.Key == "active-tier-object.txt")
+                    throw new S3Exception(new Error(ErrorCode.ObjectAlreadyInActiveTierError));
+
+                if (!IsArchivedKey(ctx.Request.Key))
+                    throw new S3Exception(new Error(ErrorCode.InvalidObjectState));
+
+                RestoreStatus existing = GetRestoreStatus(ctx.Request.Key);
+                if (existing != null && existing.OngoingRequest)
+                    throw new S3Exception(new Error(ErrorCode.RestoreAlreadyInProgress));
+
+                if (ctx.Request.Key == "archived-restored.txt")
+                {
+                    RestoreStatus updated = new RestoreStatus
+                    {
+                        OngoingRequest = false,
+                        ExpiryDate = DateTime.UtcNow.AddDays(request.Days.Value)
+                    };
+
+                    _RestoreStatuses[ctx.Request.Key] = updated;
+                    return new RestoreObjectResult { AlreadyRestored = true };
+                }
+
+                _RestoreStatuses[ctx.Request.Key] = new RestoreStatus
+                {
+                    OngoingRequest = true
+                };
+
+                return new RestoreObjectResult { AlreadyRestored = false };
+            };
 
             Server.Object.ReadRetention = async (ctx) =>
             {
@@ -515,6 +532,85 @@ namespace Test.Shared
             Server.Object.AbortMultipartUpload = async (ctx) => { };
 
             Server.Object.SelectContent = async (ctx, selectReq) => { };
+        }
+
+        private bool IsArchivedKey(string key)
+        {
+            return key == "archived-object.txt"
+                || key == "archived-in-progress.txt"
+                || key == "archived-restored.txt";
+        }
+
+        private RestoreStatus GetRestoreStatus(string key)
+        {
+            if (_RestoreStatuses.TryGetValue(key, out RestoreStatus status))
+                return status;
+
+            if (key == "archived-in-progress.txt")
+            {
+                return new RestoreStatus
+                {
+                    OngoingRequest = true
+                };
+            }
+
+            if (key == "archived-restored.txt")
+            {
+                return new RestoreStatus
+                {
+                    OngoingRequest = false,
+                    ExpiryDate = DateTime.UtcNow.AddDays(2)
+                };
+            }
+
+            return null;
+        }
+
+        private S3ServerLibrary.S3Objects.ObjectMetadata BuildObjectMetadata(string key)
+        {
+            S3ServerLibrary.S3Objects.ObjectMetadata metadata = new S3ServerLibrary.S3Objects.ObjectMetadata(
+                key,
+                DateTime.UtcNow,
+                "6cd3556deb0da54bca060b4c39479839",
+                13,
+                _Owner,
+                GetStorageClass(key));
+
+            metadata.ContentType = "text/plain";
+            metadata.RestoreStatus = GetRestoreStatus(key);
+            return metadata;
+        }
+
+        private S3Object BuildObject(string key)
+        {
+            RestoreStatus restoreStatus = GetRestoreStatus(key);
+            StorageClassEnum storageClass = GetStorageClass(key);
+
+            if (IsArchivedKey(key) && (restoreStatus == null || restoreStatus.OngoingRequest))
+                throw new S3Exception(new Error(ErrorCode.InvalidObjectState));
+
+            S3Object obj = new S3ServerLibrary.S3Object(
+                key,
+                "1",
+                true,
+                DateTime.UtcNow,
+                "5d41402abc4b2a76b9719d911017c592",
+                5,
+                _Owner,
+                "hello",
+                "text/plain",
+                storageClass);
+
+            obj.RestoreStatus = restoreStatus;
+            return obj;
+        }
+
+        private StorageClassEnum GetStorageClass(string key)
+        {
+            if (IsArchivedKey(key))
+                return StorageClassEnum.GLACIER;
+
+            return StorageClassEnum.STANDARD;
         }
 
         #endregion

@@ -226,6 +226,10 @@
                         ObjectExists();
                         break;
 
+                    case "restore":
+                        RestoreObject();
+                        break;
+
                     case "write legal hold":
                         WriteObjectLegalHold();
                         break;
@@ -328,6 +332,7 @@
             Console.WriteLine("   delete tags         Delete tags from an object");
             Console.WriteLine("   delete acl          Delete an object's ACL");
             Console.WriteLine("   exists              Check if object exists");
+            Console.WriteLine("   restore             Restore an archived object");
             Console.WriteLine("   write legal hold    Write legal hold to an object");
             Console.WriteLine("   read legal hold     Read legal hold from an object");
             Console.WriteLine("   initiate multipart  Initiate multipart upload");
@@ -1444,6 +1449,38 @@
             catch (Exception)
             {
                 Console.WriteLine("Does not exist");
+            }
+        }
+
+        static void RestoreObject()
+        {
+            string id = Inputty.GetString("Key:", null, false);
+            int days = Inputty.GetInteger("Days:", 7, true, false);
+
+            try
+            {
+                RestoreObjectRequest request = new RestoreObjectRequest
+                {
+                    BucketName = _Bucket,
+                    Key = id,
+                    Days = days
+                };
+
+                RestoreObjectResponse response = _S3Client.RestoreObjectAsync(request).Result;
+
+                if (response != null)
+                {
+                    Console.WriteLine("Success");
+                    Console.WriteLine("  Status Code: " + (int)response.HttpStatusCode);
+                }
+                else
+                {
+                    Console.WriteLine("Failed");
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
             }
         }
 

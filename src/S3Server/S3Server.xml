@@ -186,6 +186,11 @@
             Read an object's tags.
             </summary>
         </member>
+        <member name="P:S3ServerLibrary.Callbacks.ObjectCallbacks.Restore">
+            <summary>
+            Restore an archived object.
+            </summary>
+        </member>
         <member name="P:S3ServerLibrary.Callbacks.ObjectCallbacks.ReadLegalHold">
             <summary>
             Read an object's legal hold status.
@@ -356,6 +361,12 @@
             Dispose.
             </summary>
         </member>
+        <member name="M:S3ServerLibrary.S3Context.Dispose(System.Boolean)">
+            <summary>
+            Dispose of resources.
+            </summary>
+            <param name="disposing">Disposing.</param>
+        </member>
         <member name="T:S3ServerLibrary.S3Exception">
             <summary>
             S3 exception.  Throw an instance of this object if an S3 error response needs to be returned to the caller.
@@ -434,6 +445,11 @@
             Object owner.
             </summary>
         </member>
+        <member name="P:S3ServerLibrary.S3Object.RestoreStatus">
+            <summary>
+            Restore status for archived objects, returned through the x-amz-restore response header.
+            </summary>
+        </member>
         <member name="P:S3ServerLibrary.S3Object.Data">
             <summary>
             Stream containing data.
@@ -498,6 +514,17 @@
             <param name="data">Stream containing data.</param>
             <param name="contentType">Content type.</param>
             <param name="storageClass">Storage class.</param>
+        </member>
+        <member name="M:S3ServerLibrary.S3Object.Dispose">
+            <summary>
+            Dispose.
+            </summary>
+        </member>
+        <member name="M:S3ServerLibrary.S3Object.Dispose(System.Boolean)">
+            <summary>
+            Dispose of resources.
+            </summary>
+            <param name="disposing">Disposing.</param>
         </member>
         <member name="T:S3ServerLibrary.S3Objects.AccessControlList">
             <summary>
@@ -646,7 +673,7 @@
             Common prefixes.
             </summary>
         </member>
-        <member name="P:S3ServerLibrary.S3Objects.CommonPrefixes.Prefixes">
+        <member name="P:S3ServerLibrary.S3Objects.CommonPrefixes.Prefix">
             <summary>
             Prefix.
             </summary>
@@ -656,11 +683,11 @@
             Instantiate.
             </summary>
         </member>
-        <member name="M:S3ServerLibrary.S3Objects.CommonPrefixes.#ctor(System.Collections.Generic.List{System.String})">
+        <member name="M:S3ServerLibrary.S3Objects.CommonPrefixes.#ctor(System.String)">
             <summary>
             Instantiate.
             </summary>
-            <param name="prefixes">Prefixes.</param>
+            <param name="prefix">Prefix.</param>
         </member>
         <member name="T:S3ServerLibrary.S3Objects.CompleteMultipartUpload">
             <summary>
@@ -726,6 +753,30 @@
             <summary>
             Instantiate.
             </summary>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.CompleteMultipartUploadResult.ShouldSerializeChecksumCRC32">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.CompleteMultipartUploadResult.ShouldSerializeChecksumCRC32C">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.CompleteMultipartUploadResult.ShouldSerializeChecksumSHA1">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.CompleteMultipartUploadResult.ShouldSerializeChecksumSHA256">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
         </member>
         <member name="T:S3ServerLibrary.S3Objects.CompressionTypeEnum">
             <summary>
@@ -982,6 +1033,16 @@
             Amazon S3 error.
             </summary>
         </member>
+        <member name="P:S3ServerLibrary.S3Objects.Error.Code">
+            <summary>
+            Error code.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.Error.Message">
+            <summary>
+            Message associated with the error.
+            </summary>
+        </member>
         <member name="P:S3ServerLibrary.S3Objects.Error.Key">
             <summary>
             Object key.
@@ -1002,14 +1063,9 @@
             The resource incident to the request.
             </summary>
         </member>
-        <member name="P:S3ServerLibrary.S3Objects.Error.Code">
+        <member name="P:S3ServerLibrary.S3Objects.Error.HostId">
             <summary>
-            Error code.
-            </summary>
-        </member>
-        <member name="P:S3ServerLibrary.S3Objects.Error.Message">
-            <summary>
-            Message associated with the error.
+            Host identifier.
             </summary>
         </member>
         <member name="P:S3ServerLibrary.S3Objects.Error.HttpStatusCode">
@@ -1031,6 +1087,36 @@
             <param name="versionId">Version ID.</param>
             <param name="requestId">Request ID.</param>
             <param name="resource">Resource.</param>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.Error.ShouldSerializeKey">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.Error.ShouldSerializeVersionId">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.Error.ShouldSerializeRequestId">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.Error.ShouldSerializeResource">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.Error.ShouldSerializeHostId">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
         </member>
         <member name="T:S3ServerLibrary.S3Objects.ErrorCode">
             <summary>
@@ -1175,6 +1261,11 @@
         <member name="F:S3ServerLibrary.S3Objects.ErrorCode.InvalidObjectState">
             <summary>
             The operation is not valid for the current state of the object.
+            </summary>
+        </member>
+        <member name="F:S3ServerLibrary.S3Objects.ErrorCode.GlacierExpeditedRetrievalNotAvailable">
+            <summary>
+            Expedited retrievals are currently not available. Try again later.
             </summary>
         </member>
         <member name="F:S3ServerLibrary.S3Objects.ErrorCode.InvalidPart">
@@ -1327,6 +1418,11 @@
             The lifecycle configuration does not exist.
             </summary>
         </member>
+        <member name="F:S3ServerLibrary.S3Objects.ErrorCode.NoSuchTagSetError">
+            <summary>
+            The TagSet does not exist.
+            </summary>
+        </member>
         <member name="F:S3ServerLibrary.S3Objects.ErrorCode.NoSuchUpload">
             <summary>
             The specified multipart upload does not exist. The upload ID might be invalid, or the multipart upload might have been aborted or completed.
@@ -1345,6 +1441,11 @@
         <member name="F:S3ServerLibrary.S3Objects.ErrorCode.NotSignedUp">
             <summary>
             Your account is not signed up for the Amazon S3 service.
+            </summary>
+        </member>
+        <member name="F:S3ServerLibrary.S3Objects.ErrorCode.ObjectAlreadyInActiveTierError">
+            <summary>
+            This action is not allowed against this storage tier.
             </summary>
         </member>
         <member name="F:S3ServerLibrary.S3Objects.ErrorCode.OperationAborted">
@@ -1493,6 +1594,16 @@
             NONE.
             </summary>
         </member>
+        <member name="T:S3ServerLibrary.S3Objects.GlacierJobParameters">
+            <summary>
+            Glacier restore job parameters.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.GlacierJobParameters.Tier">
+            <summary>
+            Restore tier.
+            </summary>
+        </member>
         <member name="T:S3ServerLibrary.S3Objects.Grant">
             <summary>
             A grant allowing a grantee permissiont to a resource.
@@ -1566,6 +1677,30 @@
             <param name="uri">URI.</param>
             <param name="granteeType">Grantee type.  Valid values are CanonicalUser, AmazonCustomerByEmail, Group.</param>
             <param name="email">Email.</param>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.Grantee.ShouldSerializeID">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.Grantee.ShouldSerializeDisplayName">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.Grantee.ShouldSerializeURI">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.Grantee.ShouldSerializeEmailAddress">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
         </member>
         <member name="T:S3ServerLibrary.S3Objects.CanonicalUser">
             <summary>
@@ -1845,7 +1980,7 @@
             Instantiate.
             </summary>
         </member>
-        <member name="M:S3ServerLibrary.S3Objects.ListBucketResult.#ctor(System.String,System.Collections.Generic.List{S3ServerLibrary.S3Objects.ObjectMetadata},System.Int32,System.Int32,System.String,System.String,System.String,System.Boolean,System.String,S3ServerLibrary.S3Objects.CommonPrefixes,System.String)">
+        <member name="M:S3ServerLibrary.S3Objects.ListBucketResult.#ctor(System.String,System.Collections.Generic.List{S3ServerLibrary.S3Objects.ObjectMetadata},System.Int32,System.Int32,System.String,System.String,System.String,System.Boolean,System.String,System.Collections.Generic.List{S3ServerLibrary.S3Objects.CommonPrefixes},System.String)">
             <summary>
             Instantiate.
             </summary>
@@ -1874,6 +2009,18 @@
             <returns>Boolean</returns>
         </member>
         <member name="M:S3ServerLibrary.S3Objects.ListBucketResult.ShouldSerializeCommonPrefixes">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.ListBucketResult.ShouldSerializeDelimiter">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.ListBucketResult.ShouldSerializeEncodingType">
             <summary>
             Helper method for XML serialization.
             </summary>
@@ -1941,7 +2088,8 @@
         </member>
         <member name="P:S3ServerLibrary.S3Objects.ListMultipartUploadsResult.EncodingType">
             <summary>
-            Encoding type.
+            Encoding type used to encode object key names in the XML response.
+            Valid value is "url" for URL encoding.
             </summary>
         </member>
         <member name="M:S3ServerLibrary.S3Objects.ListMultipartUploadsResult.#ctor">
@@ -1956,6 +2104,24 @@
             <param name="bucket">Bucket.</param>
             <param name="key">Key.</param>
             <param name="uploadId">Upload ID.</param>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.ListMultipartUploadsResult.ShouldSerializeUploads">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.ListMultipartUploadsResult.ShouldSerializeCommonPrefixes">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.ListMultipartUploadsResult.ShouldSerializeEncodingType">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
         </member>
         <member name="T:S3ServerLibrary.S3Objects.ListPartsResult">
             <summary>
@@ -1997,11 +2163,6 @@
             Flag to indicate if the results were truncated.
             </summary>
         </member>
-        <member name="P:S3ServerLibrary.S3Objects.ListPartsResult.Parts">
-            <summary>
-            Parts.
-            </summary>
-        </member>
         <member name="P:S3ServerLibrary.S3Objects.ListPartsResult.Initiator">
             <summary>
             Initiator of the upload.
@@ -2022,10 +2183,27 @@
             Checksum algorithm.
             </summary>
         </member>
+        <member name="P:S3ServerLibrary.S3Objects.ListPartsResult.IncludeChecksumAlgorithm">
+            <summary>
+            Flag to control whether ChecksumAlgorithm is serialized.
+            Default value is false.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.ListPartsResult.Parts">
+            <summary>
+            Parts.
+            </summary>
+        </member>
         <member name="M:S3ServerLibrary.S3Objects.ListPartsResult.#ctor">
             <summary>
             Instantiate.
             </summary>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.ListPartsResult.ShouldSerializeChecksumAlgorithm">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
         </member>
         <member name="T:S3ServerLibrary.S3Objects.ListVersionsResult">
             <summary>
@@ -2072,6 +2250,31 @@
             Delete markers.
             </summary>
         </member>
+        <member name="P:S3ServerLibrary.S3Objects.ListVersionsResult.NextKeyMarker">
+            <summary>
+            Next key marker for pagination when results are truncated.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.ListVersionsResult.NextVersionIdMarker">
+            <summary>
+            Next version ID marker for pagination when results are truncated.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.ListVersionsResult.Delimiter">
+            <summary>
+            Delimiter used to group keys.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.ListVersionsResult.CommonPrefixes">
+            <summary>
+            Common prefixes for grouped keys when using a delimiter.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.ListVersionsResult.EncodingType">
+            <summary>
+            Encoding type for object keys in the response.
+            </summary>
+        </member>
         <member name="P:S3ServerLibrary.S3Objects.ListVersionsResult.BucketRegion">
             <summary>
             Bucket region string.  Not included in the XML, but rather as the HTTP header x-amz-bucket-region.
@@ -2082,7 +2285,7 @@
             Instantiate.
             </summary>
         </member>
-        <member name="M:S3ServerLibrary.S3Objects.ListVersionsResult.#ctor(System.String,System.Collections.Generic.List{S3ServerLibrary.S3Objects.ObjectVersion},System.Collections.Generic.List{S3ServerLibrary.S3Objects.DeleteMarker},System.Int32,System.String,System.String,System.String,System.Boolean,System.String)">
+        <member name="M:S3ServerLibrary.S3Objects.ListVersionsResult.#ctor(System.String,System.Collections.Generic.List{S3ServerLibrary.S3Objects.ObjectVersion},System.Collections.Generic.List{S3ServerLibrary.S3Objects.DeleteMarker},System.Int32,System.String,System.String,System.String,System.Boolean,System.String,System.String,System.String,System.Collections.Generic.List{S3ServerLibrary.S3Objects.CommonPrefixes},System.String,System.String)">
             <summary>
             Instantiate.
             </summary>
@@ -2094,7 +2297,54 @@
             <param name="versionIdMarker">Version ID marker.</param>
             <param name="isTruncated">Is truncated.</param>
             <param name="deleteMarkers">Delete markers.</param>
+            <param name="nextKeyMarker">Next key marker for pagination.</param>
+            <param name="nextVersionIdMarker">Next version ID marker for pagination.</param>
+            <param name="delimiter">Delimiter for grouping keys.</param>
+            <param name="commonPrefixes">Common prefixes.</param>
+            <param name="encodingType">Encoding type.</param>
             <param name="bucketRegion">Bucket region.</param>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.ListVersionsResult.ShouldSerializeVersions">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.ListVersionsResult.ShouldSerializeDeleteMarkers">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.ListVersionsResult.ShouldSerializeNextKeyMarker">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.ListVersionsResult.ShouldSerializeNextVersionIdMarker">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.ListVersionsResult.ShouldSerializeDelimiter">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.ListVersionsResult.ShouldSerializeCommonPrefixes">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.ListVersionsResult.ShouldSerializeEncodingType">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
         </member>
         <member name="T:S3ServerLibrary.S3Objects.LocationConstraint">
             <summary>
@@ -2234,6 +2484,11 @@
             Object owner.
             </summary>
         </member>
+        <member name="P:S3ServerLibrary.S3Objects.ObjectMetadata.RestoreStatus">
+            <summary>
+            Restore status for archived objects, returned through the x-amz-restore response header.
+            </summary>
+        </member>
         <member name="M:S3ServerLibrary.S3Objects.ObjectMetadata.#ctor">
             <summary>
             Instantiate.
@@ -2356,6 +2611,30 @@
             <summary>
             Instantiate.
             </summary>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.Part.ShouldSerializeChecksumCRC32">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.Part.ShouldSerializeChecksumCRC32C">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.Part.ShouldSerializeChecksumSHA1">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.Part.ShouldSerializeChecksumSHA256">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
         </member>
         <member name="T:S3ServerLibrary.S3Objects.PermissionEnum">
             <summary>
@@ -2505,6 +2784,104 @@
         <member name="M:S3ServerLibrary.S3Objects.RequestProgress.#ctor">
             <summary>
             Instantiate.
+            </summary>
+        </member>
+        <member name="T:S3ServerLibrary.S3Objects.RestoreObjectResult">
+            <summary>
+            Result from a restore object request.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.RestoreObjectResult.AlreadyRestored">
+            <summary>
+            True if the object already had an active restored copy and the operation updated its expiry.
+            False if a new restore was initiated.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.RestoreObjectResult.RestoreOutputPath">
+            <summary>
+            Restore output path for restore-select operations.
+            Reserved for future support.
+            </summary>
+        </member>
+        <member name="T:S3ServerLibrary.S3Objects.RestoreRequest">
+            <summary>
+            Restore object request.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.RestoreRequest.Days">
+            <summary>
+            Lifetime of the restored copy in days.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.RestoreRequest.GlacierJobParameters">
+            <summary>
+            Glacier job parameters.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.RestoreRequest.Tier">
+            <summary>
+            Top-level retrieval tier.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.RestoreRequest.Description">
+            <summary>
+            Optional description.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.RestoreRequest.AdditionalElements">
+            <summary>
+            Any additional request elements not modeled by this class.
+            Used to detect unsupported restore-select payloads.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.RestoreRequest.EffectiveTier">
+            <summary>
+            Effective restore tier.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.RestoreRequest.HasUnsupportedRestoreSelectFields">
+            <summary>
+            True if the request contains unsupported restore-select fields.
+            </summary>
+        </member>
+        <member name="T:S3ServerLibrary.S3Objects.RestoreStatus">
+            <summary>
+            Restore status of an archived object.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.RestoreStatus.OngoingRequest">
+            <summary>
+            True if restore is still in progress.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.RestoreStatus.ExpiryDate">
+            <summary>
+            Expiration of the active restored copy, if available.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.RestoreStatus.HeaderValue">
+            <summary>
+            Format for the x-amz-restore response header.
+            </summary>
+        </member>
+        <member name="T:S3ServerLibrary.S3Objects.RestoreTierEnum">
+            <summary>
+            Restore tiers used by S3 archive restore operations.
+            </summary>
+        </member>
+        <member name="F:S3ServerLibrary.S3Objects.RestoreTierEnum.Standard">
+            <summary>
+            Standard retrieval.
+            </summary>
+        </member>
+        <member name="F:S3ServerLibrary.S3Objects.RestoreTierEnum.Bulk">
+            <summary>
+            Bulk retrieval.
+            </summary>
+        </member>
+        <member name="F:S3ServerLibrary.S3Objects.RestoreTierEnum.Expedited">
+            <summary>
+            Expedited retrieval.
             </summary>
         </member>
         <member name="T:S3ServerLibrary.S3Objects.Retention">
@@ -2803,19 +3180,14 @@
             Upload.
             </summary>
         </member>
-        <member name="P:S3ServerLibrary.S3Objects.Upload.ChecksumAlgorithm">
-            <summary>
-            Checksum algorithm.
-            </summary>
-        </member>
-        <member name="P:S3ServerLibrary.S3Objects.Upload.Initiated">
-            <summary>
-            Timestamp from when the upload was initiated.
-            </summary>
-        </member>
         <member name="P:S3ServerLibrary.S3Objects.Upload.Key">
             <summary>
             Key.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.Upload.UploadId">
+            <summary>
+            Upload ID.
             </summary>
         </member>
         <member name="P:S3ServerLibrary.S3Objects.Upload.Initiator">
@@ -2833,15 +3205,32 @@
             Storage class.
             </summary>
         </member>
-        <member name="P:S3ServerLibrary.S3Objects.Upload.UploadId">
+        <member name="P:S3ServerLibrary.S3Objects.Upload.Initiated">
             <summary>
-            Upload ID.
+            Timestamp from when the upload was initiated.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.Upload.ChecksumAlgorithm">
+            <summary>
+            Checksum algorithm.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.Upload.IncludeChecksumAlgorithm">
+            <summary>
+            Flag to control whether ChecksumAlgorithm is serialized.
+            Default value is false.
             </summary>
         </member>
         <member name="M:S3ServerLibrary.S3Objects.Upload.#ctor">
             <summary>
             Instantiate.
             </summary>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.Upload.ShouldSerializeChecksumAlgorithm">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
         </member>
         <member name="T:S3ServerLibrary.S3Objects.VersionedEntity">
             <summary>
@@ -2876,6 +3265,11 @@
         <member name="P:S3ServerLibrary.S3Objects.VersionedEntity.Size">
             <summary>
             Content length of the object.
+            </summary>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.VersionedEntity.ShouldSerializeSize">
+            <summary>
+            Determine whether to serialize Size.
             </summary>
         </member>
         <member name="P:S3ServerLibrary.S3Objects.VersionedEntity.StorageClass">
@@ -2954,6 +3348,18 @@
             Valid values are null, Enabled, Disabled.
             </summary>
         </member>
+        <member name="P:S3ServerLibrary.S3Objects.VersioningConfiguration.IncludeStatus">
+            <summary>
+            Flag to control whether Status is serialized.
+            Default value is true.
+            </summary>
+        </member>
+        <member name="P:S3ServerLibrary.S3Objects.VersioningConfiguration.IncludeMfaDelete">
+            <summary>
+            Flag to control whether MfaDelete is serialized.
+            Default value is false.
+            </summary>
+        </member>
         <member name="M:S3ServerLibrary.S3Objects.VersioningConfiguration.#ctor">
             <summary>
             Instantiate.
@@ -2965,6 +3371,18 @@
             </summary>
             <param name="status">Status.  Valid values are null, Enabled, Suspended.</param>
             <param name="mfaDelete">MFA delete setting.  Valid values are null, Enabled, Disabled.</param>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.VersioningConfiguration.ShouldSerializeStatus">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
+        </member>
+        <member name="M:S3ServerLibrary.S3Objects.VersioningConfiguration.ShouldSerializeMfaDelete">
+            <summary>
+            Helper method for XML serialization.
+            </summary>
+            <returns>Boolean.</returns>
         </member>
         <member name="T:S3ServerLibrary.S3Objects.VersioningStatusEnum">
             <summary>
@@ -3556,6 +3974,11 @@
             Read an object's tags.
             </summary>
         </member>
+        <member name="F:S3ServerLibrary.S3RequestType.ObjectRestore">
+            <summary>
+            Restore an archived object.
+            </summary>
+        </member>
         <member name="F:S3ServerLibrary.S3RequestType.ObjectSelectContent">
             <summary>
             Select object content.
@@ -3693,18 +4116,12 @@
             <param name="error">ErrorCode.</param>
             <returns>True if successful.</returns>
         </member>
-        <member name="M:S3ServerLibrary.S3Response.SendChunk(System.Byte[])">
+        <member name="M:S3ServerLibrary.S3Response.SendChunk(System.Byte[],System.Boolean)">
             <summary>
             Send a chunk of data using chunked transfer-encoding to the requestor.
             </summary>
             <param name="data">Chunk of data.</param>
-            <returns>True if successful.</returns>
-        </member>
-        <member name="M:S3ServerLibrary.S3Response.SendFinalChunk(System.Byte[])">
-            <summary>
-            Send the final chunk of data using chunked transfer-encoding to the requestor and close the connection.
-            </summary>
-            <param name="data">Final chunk of data.</param>
+            <param name="isFinal">Boolean indicating if the chunk is the final chunk.</param>
             <returns>True if successful.</returns>
         </member>
         <member name="T:S3ServerLibrary.S3Server">
@@ -3759,6 +4176,7 @@
             <summary>
             Start accepting new connections.
             </summary>
+            <exception cref="T:System.InvalidOperationException">Thrown if EnableSignatures is true but Service.GetSecretKey is not set.</exception>
         </member>
         <member name="M:S3ServerLibrary.S3Server.Stop">
             <summary>

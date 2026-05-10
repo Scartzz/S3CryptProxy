@@ -126,6 +126,17 @@ namespace Test.Shared.Tests
                 }, token).ConfigureAwait(false);
             }
 
+            await runner.RunTestAsync("MalformedXML returns 400 for POST restore", async (ct) =>
+            {
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, server.BaseUrl + "/" + server.Bucket + "/archived-object.txt?restore");
+                request.Content = new StringContent("this is not valid xml <><>!!!", Encoding.UTF8, "application/xml");
+
+                HttpResponseMessage response = await server.HttpClient.SendAsync(request, ct).ConfigureAwait(false);
+                AssertHelper.StatusCodeEquals(HttpStatusCode.BadRequest, response, "MalformedXML restore");
+                string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                AssertHelper.StringContains(body, "MalformedXML", "error body");
+            }, token).ConfigureAwait(false);
+
             await runner.RunTestAsync("Unwired recognized operation returns 501 NotImplemented", async (ct) =>
             {
                 S3ServerSettings settings = new S3ServerSettings();
@@ -149,6 +160,36 @@ namespace Test.Shared.Tests
                         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);
                         HttpResponseMessage response = await client.SendAsync(request, ct).ConfigureAwait(false);
                         AssertHelper.StatusCodeEquals(HttpStatusCode.NotImplemented, response, "unwired BucketReadAcl");
+                        string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        AssertHelper.StringContains(body, "NotImplemented", "error body");
+                    }
+
+                    minimalServer.Stop();
+                }
+            }, token).ConfigureAwait(false);
+
+            await runner.RunTestAsync("Unwired restore operation returns 501 NotImplemented", async (ct) =>
+            {
+                S3ServerSettings settings = new S3ServerSettings();
+                settings.Webserver.Hostname = "127.0.0.1";
+                settings.Webserver.Port = server.Port + 102;
+                settings.Webserver.Ssl.Enable = false;
+
+                using (S3Server minimalServer = new S3Server(settings))
+                {
+                    minimalServer.Service.ServiceExists = async (ctx) => { return "us-west-1"; };
+                    minimalServer.Bucket.Exists = async (ctx) => { return true; };
+                    minimalServer.Start();
+
+                    using (HttpClient client = new HttpClient())
+                    {
+                        client.Timeout = TimeSpan.FromSeconds(5);
+                        client.DefaultRequestHeaders.ConnectionClose = true;
+                        string url = $"http://127.0.0.1:{server.Port + 102}/test-bucket/archived-object.txt?restore";
+                        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, url);
+                        request.Content = new StringContent("<RestoreRequest><Days>1</Days></RestoreRequest>", Encoding.UTF8, "application/xml");
+                        HttpResponseMessage response = await client.SendAsync(request, ct).ConfigureAwait(false);
+                        AssertHelper.StatusCodeEquals(HttpStatusCode.NotImplemented, response, "unwired ObjectRestore");
                         string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                         AssertHelper.StringContains(body, "NotImplemented", "error body");
                     }

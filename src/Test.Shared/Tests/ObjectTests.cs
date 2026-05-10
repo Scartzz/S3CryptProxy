@@ -53,6 +53,15 @@ namespace Test.Shared.Tests
                 AssertHelper.StatusCodeEquals(200, (int)response.HttpStatusCode, "HeadObject");
             }, token).ConfigureAwait(false);
 
+            await runner.RunTestAsync("Archived unrestored object GET returns InvalidObjectState", async (ct) =>
+            {
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, server.BaseUrl + "/" + server.Bucket + "/archived-object.txt");
+                HttpResponseMessage response = await server.HttpClient.SendAsync(request, ct).ConfigureAwait(false);
+                AssertHelper.StatusCodeEquals(HttpStatusCode.Forbidden, response, "Get archived object");
+                string body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                AssertHelper.StringContains(body, "InvalidObjectState", "error body");
+            }, token).ConfigureAwait(false);
+
             await runner.RunTestAsync("ObjectRead downloads object", async (ct) =>
             {
                 GetObjectResponse response = await server.S3Client.GetObjectAsync(new GetObjectRequest
@@ -99,6 +108,114 @@ namespace Test.Shared.Tests
 
                 AssertHelper.IsNotNull(acceptRanges, "Accept-Ranges header present");
                 AssertHelper.AreEqual("bytes", acceptRanges, "Accept-Ranges value");
+            }, token).ConfigureAwait(false);
+
+            await runner.RunTestAsync("RestoreObject returns 202 for archived object", async (ct) =>
+            {
+                RestoreObjectResponse response = await server.S3Client.RestoreObjectAsync(new RestoreObjectRequest
+                {
+                    BucketName = server.Bucket,
+                    Key = "archived-object.txt",
+                    Days = 7
+                }, ct).ConfigureAwait(false);
+
+                AssertHelper.IsNotNull(response, "response");
+                AssertHelper.StatusCodeEquals(202, (int)response.HttpStatusCode, "RestoreObject accepted");
+            }, token).ConfigureAwait(false);
+
+            await runner.RunTestAsync("HeadObject exposes restore-in-progress metadata", async (ct) =>
+            {
+                GetObjectMetadataResponse response = await server.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest
+                {
+                    BucketName = server.Bucket,
+                    Key = "archived-object.txt"
+                }, ct).ConfigureAwait(false);
+
+                AssertHelper.IsNotNull(response, "response");
+                AssertHelper.StatusCodeEquals(200, (int)response.HttpStatusCode, "HeadObject archived");
+                AssertHelper.IsTrue(response.RestoreInProgress == true, "restore is in progress");
+            }, token).ConfigureAwait(false);
+
+            await runner.RunTestAsync("RestoreObject returns 200 for already restored object", async (ct) =>
+            {
+                RestoreObjectResponse response = await server.S3Client.RestoreObjectAsync(new RestoreObjectRequest
+                {
+                    BucketName = server.Bucket,
+                    Key = "archived-restored.txt",
+                    Days = 3
+                }, ct).ConfigureAwait(false);
+
+                AssertHelper.IsNotNull(response, "response");
+                AssertHelper.StatusCodeEquals(200, (int)response.HttpStatusCode, "RestoreObject already restored");
+            }, token).ConfigureAwait(false);
+
+            await runner.RunTestAsync("HeadObject exposes restore expiration for restored object", async (ct) =>
+            {
+                GetObjectMetadataResponse response = await server.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest
+                {
+                    BucketName = server.Bucket,
+                    Key = "archived-restored.txt"
+                }, ct).ConfigureAwait(false);
+
+                AssertHelper.IsNotNull(response, "response");
+                AssertHelper.StatusCodeEquals(200, (int)response.HttpStatusCode, "HeadObject restored");
+                AssertHelper.IsFalse(response.RestoreInProgress == true, "restore is not in progress");
+                AssertHelper.IsNotNull(response.RestoreExpiration, "restore expiration");
+            }, token).ConfigureAwait(false);
+
+            await runner.RunTestAsync("GetObject succeeds for restored archived object", async (ct) =>
+            {
+                using (GetObjectResponse response = await server.S3Client.GetObjectAsync(new GetObjectRequest
+                {
+                    BucketName = server.Bucket,
+                    Key = "archived-restored.txt"
+                }, ct).ConfigureAwait(false))
+                {
+                    AssertHelper.IsNotNull(response, "response");
+                    AssertHelper.StatusCodeEquals(200, (int)response.HttpStatusCode, "GetObject restored archive");
+                    AssertHelper.IsFalse(response.RestoreInProgress == true, "restore is not in progress");
+                    AssertHelper.IsNotNull(response.RestoreExpiration, "restore expiration");
+                }
+            }, token).ConfigureAwait(false);
+
+            await runner.RunTestAsync("RestoreObject returns RestoreAlreadyInProgress when restore is active", async (ct) =>
+            {
+                try
+                {
+                    await server.S3Client.RestoreObjectAsync(new RestoreObjectRequest
+                    {
+                        BucketName = server.Bucket,
+                        Key = "archived-in-progress.txt",
+                        Days = 7
+                    }, ct).ConfigureAwait(false);
+
+                    throw new Exception("Expected AmazonS3Exception for RestoreAlreadyInProgress.");
+                }
+                catch (AmazonS3Exception s3e)
+                {
+                    AssertHelper.AreEqual(HttpStatusCode.Conflict, s3e.StatusCode, "RestoreAlreadyInProgress status");
+                    AssertHelper.AreEqual("RestoreAlreadyInProgress", s3e.ErrorCode, "RestoreAlreadyInProgress code");
+                }
+            }, token).ConfigureAwait(false);
+
+            await runner.RunTestAsync("RestoreObject returns ObjectAlreadyInActiveTierError for active tier object", async (ct) =>
+            {
+                try
+                {
+                    await server.S3Client.RestoreObjectAsync(new RestoreObjectRequest
+                    {
+                        BucketName = server.Bucket,
+                        Key = "active-tier-object.txt",
+                        Days = 7
+                    }, ct).ConfigureAwait(false);
+
+                    throw new Exception("Expected AmazonS3Exception for ObjectAlreadyInActiveTierError.");
+                }
+                catch (AmazonS3Exception s3e)
+                {
+                    AssertHelper.AreEqual(HttpStatusCode.Forbidden, s3e.StatusCode, "ObjectAlreadyInActiveTierError status");
+                    AssertHelper.AreEqual("ObjectAlreadyInActiveTierError", s3e.ErrorCode, "ObjectAlreadyInActiveTierError code");
+                }
             }, token).ConfigureAwait(false);
 
             await runner.RunTestAsync("ObjectWriteAcl sets ACL", async (ct) =>

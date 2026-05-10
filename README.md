@@ -17,6 +17,7 @@ S3Server is a **protocol adapter** that handles the complexity of the Amazon S3 
 - Deserializes XML request bodies
 - Routes requests to your callback methods
 - Serializes response objects to XML
+- Emits archive restore headers from object restore state
 - Handles error responses with proper S3 error codes
 
 **What S3Server does NOT do:**
@@ -49,7 +50,7 @@ Want a complete S3-compatible storage server built using S3Server? Check out **[
 ✅ **Complete S3 API Coverage**
 - Service operations (list buckets, check service)
 - Bucket operations (CRUD, ACLs, tags, versioning, website config, logging, location)
-- Object operations (CRUD, ACLs, tags, legal hold, retention, range reads)
+- Object operations (CRUD, ACLs, tags, legal hold, retention, range reads, archive restore)
 - Multipart upload support (initiate, upload parts, complete, abort, list parts)
 - S3 Select API support
 
@@ -403,9 +404,12 @@ server.Object.Write = async (ctx) =>
 | `Object.ReadRetention` | Get retention status | GET | `/[bucket]/[key]?retention` | `Retention` |
 | `Object.WriteRetention` | Set retention status | PUT | `/[bucket]/[key]?retention` | `void` |
 | `Object.DeleteMultiple` | Delete multiple objects | POST | `/[bucket]?delete` | `DeleteResult` |
+| `Object.Restore` | Restore archived object | POST | `/[bucket]/[key]?restore` | `RestoreObjectResult` |
 | `Object.SelectContent` | S3 Select query | POST | `/[bucket]/[key]?select&select-type=2` | `void` |
 
 \* `ReadRange` is triggered when Range header is present
+
+For archived objects, set `ObjectMetadata.RestoreStatus` and `S3Object.RestoreStatus` to have S3Server emit the `x-amz-restore` response header on `HEAD` and `GET`.
 
 ### Multipart Upload Callbacks
 
@@ -696,6 +700,55 @@ server.Object.CompleteMultipartUpload = async (ctx, request) =>
 };
 ```
 
+### Archived Object Restore
+
+```csharp
+server.Object.Restore = async (ctx, request) =>
+{
+    // Start restore work in your backend, or extend an existing restore window.
+    bool alreadyRestored = TryExtendRestoreWindow(
+        ctx.Request.Bucket,
+        ctx.Request.Key,
+        request.Days.Value,
+        request.EffectiveTier);
+
+    return new RestoreObjectResult
+    {
+        AlreadyRestored = alreadyRestored
+    };
+};
+
+server.Object.Exists = async (ctx) =>
+{
+    return new ObjectMetadata(ctx.Request.Key, DateTime.UtcNow, "etag", 123, new Owner("admin", "Administrator"), StorageClassEnum.GLACIER)
+    {
+        ContentType = "application/octet-stream",
+        RestoreStatus = new RestoreStatus
+        {
+            OngoingRequest = false,
+            ExpiryDate = DateTime.UtcNow.AddDays(7)
+        }
+    };
+};
+
+server.Object.Read = async (ctx) =>
+{
+    if (!IsRestored(ctx.Request.Bucket, ctx.Request.Key))
+        throw new S3Exception(new Error(ErrorCode.InvalidObjectState));
+
+    return new S3Object(ctx.Request.Key, "1", true, DateTime.UtcNow, "etag", 5, new Owner("admin", "Administrator"), "hello", "text/plain", StorageClassEnum.GLACIER)
+    {
+        RestoreStatus = new RestoreStatus
+        {
+            OngoingRequest = false,
+            ExpiryDate = DateTime.UtcNow.AddDays(7)
+        }
+    };
+};
+```
+
+S3Server routes `POST ?restore`, returns `202 Accepted` for a newly initiated restore, `200 OK` when your callback reports an already-restored object, and surfaces restore state through the `x-amz-restore` header on `HEAD` and `GET`.
+
 ### Operation Limits
 
 Control maximum upload sizes:
@@ -723,7 +776,7 @@ The following S3 operations are not exposed through callbacks (may be added in f
 - Accelerate, Analytics, CORS, Encryption, Inventory, Lifecycle, Notification, Object lock configuration, Policy status, Public access block, Metrics, Payment, Policy, Replication
 
 **Object operations:**
-- Torrent, Restore (Glacier)
+- Torrent
 
 ## Examples and Testing
 
@@ -775,6 +828,13 @@ Have a feature request or found an issue? Please [file an issue on GitHub](https
 ## Version History
 
 Refer to [CHANGELOG.md](CHANGELOG.md) for version history and release notes.
+
+## New in v7.1.0
+
+- Added `Object.Restore` callback support for `POST ?restore`
+- Added typed restore request/result/status models
+- `S3Object` and `ObjectMetadata` now emit `x-amz-restore` when `RestoreStatus` is supplied
+- Added restore coverage in automated, compliance, xUnit, and signature validation tests
 
 ## New in v7.0.5
 

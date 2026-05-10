@@ -3,6 +3,7 @@
     using S3ServerLibrary.Callbacks;
     using S3ServerLibrary.S3Objects;
     using System;
+    using System.Collections.Specialized;
     using System.Collections.Generic;
     using System.Globalization;
     using System.Net.NetworkInformation;
@@ -213,6 +214,8 @@
             CompleteMultipartUpload completeMultipartRequest = null;
             CompleteMultipartUploadResult completeMultipartResult = null;
             SelectObjectContentRequest selectRequest = null;
+            RestoreRequest restoreRequest = null;
+            RestoreObjectResult restoreResult = null;
 
             S3Context s3ctx = null;
 
@@ -778,6 +781,7 @@
                                     s3ctx.Response.Headers.Add(Constants.HeaderLastModified, md.LastModified.ToString(Constants.AmazonTimestampFormatVerbose, CultureInfo.InvariantCulture));
                                     s3ctx.Response.Headers.Add(Constants.HeaderStorageClass, md.StorageClass.ToString());
                                     s3ctx.Response.Headers.Add(Constants.HeaderAcceptRanges, "bytes");
+                                    AddRestoreHeader(s3ctx.Response.Headers, md.RestoreStatus);
 
                                     s3ctx.Response.StatusCode = 200;
                                     s3ctx.Response.ContentLength = md.Size;
@@ -807,6 +811,7 @@
                                     s3ctx.Response.Headers.Add(Constants.HeaderLastModified, s3obj.LastModified.ToString(Constants.AmazonTimestampFormatVerbose, CultureInfo.InvariantCulture));
                                     s3ctx.Response.Headers.Add(Constants.HeaderStorageClass, s3obj.StorageClass.ToString());
                                     s3ctx.Response.Headers.Add(Constants.HeaderAcceptRanges, "bytes");
+                                    AddRestoreHeader(s3ctx.Response.Headers, s3obj.RestoreStatus);
 
                                     s3ctx.Response.StatusCode = 200;
                                     s3ctx.Response.ContentType = s3obj.ContentType;
@@ -870,6 +875,7 @@
                                     s3ctx.Response.Headers.Add(Constants.HeaderLastModified, s3obj.LastModified.ToString(Constants.AmazonTimestampFormatVerbose, CultureInfo.InvariantCulture));
                                     s3ctx.Response.Headers.Add(Constants.HeaderStorageClass, s3obj.StorageClass.ToString());
                                     s3ctx.Response.Headers.Add(Constants.HeaderAcceptRanges, "bytes");
+                                    AddRestoreHeader(s3ctx.Response.Headers, s3obj.RestoreStatus);
 
                                     if (s3ctx.Request.RangeStart != null)
                                     {
@@ -912,6 +918,53 @@
                                 s3ctx.Response.StatusCode = 200;
                                 s3ctx.Response.ContentType = Constants.ContentTypeXml;
                                 await s3ctx.Response.Send(SerializationHelper.SerializeXml(tagging)).ConfigureAwait(false);
+                                return;
+                            }
+                            break;
+
+                        case S3RequestType.ObjectRestore:
+                            if (Object.Restore != null)
+                            {
+                                if (String.IsNullOrWhiteSpace(s3ctx.Request.DataAsString))
+                                    throw new S3Exception(new Error(ErrorCode.MissingRequestBodyError));
+
+                                try
+                                {
+                                    restoreRequest = SerializationHelper.DeserializeXml<RestoreRequest>(s3ctx.Request.DataAsString);
+                                }
+                                catch (ArgumentOutOfRangeException aoore)
+                                {
+                                    aoore.Data.Add("Context", s3ctx);
+                                    aoore.Data.Add("RequestBody", s3ctx.Request.DataAsString);
+                                    _Settings.Logger?.Invoke(_Header + "restore request validation exception: " + Environment.NewLine + aoore.ToString());
+                                    throw new S3Exception(new Error(ErrorCode.InvalidArgument), aoore);
+                                }
+                                catch (InvalidOperationException ioe)
+                                {
+                                    ioe.Data.Add("Context", s3ctx);
+                                    ioe.Data.Add("RequestBody", s3ctx.Request.DataAsString);
+                                    _Settings.Logger?.Invoke(_Header + "XML exception: " + Environment.NewLine + ioe.ToString());
+                                    throw new S3Exception(new Error(ErrorCode.MalformedXML), ioe);
+                                }
+
+                                if (restoreRequest == null)
+                                    throw new S3Exception(new Error(ErrorCode.MalformedXML));
+
+                                if (restoreRequest.HasUnsupportedRestoreSelectFields)
+                                    throw new S3Exception(new Error(ErrorCode.NotImplemented));
+
+                                if (restoreRequest.Days == null)
+                                    throw new S3Exception(new Error(ErrorCode.InvalidRequest));
+
+                                restoreResult = await Object.Restore(s3ctx, restoreRequest).ConfigureAwait(false);
+                                if (restoreResult == null) restoreResult = new RestoreObjectResult();
+
+                                if (!String.IsNullOrEmpty(restoreResult.RestoreOutputPath))
+                                    s3ctx.Response.Headers.Add(Constants.HeaderRestoreOutputPath, restoreResult.RestoreOutputPath);
+
+                                s3ctx.Response.StatusCode = (restoreResult.AlreadyRestored ? 200 : 202);
+                                s3ctx.Response.ContentType = Constants.ContentTypeText;
+                                await s3ctx.Response.Send().ConfigureAwait(false);
                                 return;
                             }
                             break;
@@ -1138,6 +1191,15 @@
                     }
                 }
             }
+        }
+
+        private static void AddRestoreHeader(NameValueCollection headers, RestoreStatus status)
+        {
+            if (headers == null || status == null) return;
+
+            string headerValue = status.HeaderValue;
+            if (!String.IsNullOrEmpty(headerValue))
+                headers.Add(Constants.HeaderRestore, headerValue);
         }
 
         #endregion

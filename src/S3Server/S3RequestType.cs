@@ -212,6 +212,11 @@
         [EnumMember(Value = "ObjectReadTags")]
         ObjectReadTags,
         /// <summary>
+        /// Restore an archived object.
+        /// </summary>
+        [EnumMember(Value = "ObjectRestore")]
+        ObjectRestore,
+        /// <summary>
         /// Select object content.
         /// </summary>
         [EnumMember(Value = "ObjectSelectContent")]
