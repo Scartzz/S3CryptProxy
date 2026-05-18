@@ -92,7 +92,7 @@ namespace S3ServerLibrary
     // Configure server settings
     S3ServerSettings settings = new S3ServerSettings();
     settings.Webserver = new WebserverSettings("localhost", 8000, false);
-    settings.Logger = Console.WriteLine;
+    settings.Logger = this._logger.LogInformation;
 
     // Create and configure server
     S3Server server = new S3Server(settings);
@@ -118,8 +118,8 @@ namespace S3ServerLibrary
     server.Object.Write = async (ctx) =>
     {
         // Save object data from ctx.Request.Data stream
-        Console.WriteLine($"Writing object: {ctx.Request.Bucket}/{ctx.Request.Key}");
-        Console.WriteLine($"Content length: {ctx.Request.ContentLength}");
+        this._logger.LogInformation($"Writing object: {ctx.Request.Bucket}/{ctx.Request.Key}");
+        this._logger.LogInformation($"Content length: {ctx.Request.ContentLength}");
         // Implement your storage logic here
     };
 
@@ -143,7 +143,7 @@ namespace S3ServerLibrary
 
     // Start server
     server.Start();
-    Console.WriteLine("S3 Server listening on http://localhost:8000");
+    this._logger.LogInformation("S3 Server listening on http://localhost:8000");
 }
 ```
 
@@ -158,7 +158,7 @@ S3ServerSettings settings = new S3ServerSettings
     Webserver = new WebserverSettings("localhost", 8000, false),
 
     // Optional: Logger for diagnostic output
-    Logger = (msg) => Console.WriteLine(msg),
+    Logger = (msg) => this._logger.LogInformation(msg),
 
     // Optional: Enable specific logging categories
     Logging = new LoggingSettings
@@ -208,14 +208,14 @@ settings.PreRequestHandler = async (ctx) =>
 // Default request handler (called when no callback matches)
 settings.DefaultRequestHandler = async (ctx) =>
 {
-    Console.WriteLine($"Unhandled request: {ctx.Request.RequestType}");
+    this._logger.LogInformation($"Unhandled request: {ctx.Request.RequestType}");
     await ctx.Response.Send(ErrorCode.InvalidRequest);
 };
 
 // Post-request handler (logging, metrics)
 settings.PostRequestHandler = async (ctx) =>
 {
-    Console.WriteLine($"Completed: {ctx.Request.RequestType} - {ctx.Response.StatusCode}");
+    this._logger.LogInformation($"Completed: {ctx.Request.RequestType} - {ctx.Response.StatusCode}");
     // Log metrics, update statistics, etc.
 };
 ```

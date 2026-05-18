@@ -1,0 +1,25 @@
+﻿namespace S3CryptProxy.Models;
+
+using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
+using System.Xml.Serialization;
+
+/// <summary>
+/// JSON type enum. 
+/// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum JsonTypeEnum
+{
+    /// <summary>
+    /// DOCUMENT.
+    /// </summary>
+    [EnumMember(Value = "DOCUMENT")]
+    [XmlEnum(Name = "DOCUMENT")]
+    Document,
+    /// <summary>
+    /// LINES.
+    /// </summary>
+    [EnumMember(Value = "LINES")]
+    [XmlEnum(Name = "LINES")]
+    Lines,
+}

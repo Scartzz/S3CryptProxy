@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Authors>Niklas Hardes and Joel Christner</Authors>
+        <Description>Emulated Amazon Web Services (AWS) Simple Storage Service (S3) server-side interface.</Description>
+        <Copyright>(c)2026 Niklas Hardes and Joel Christner</Copyright>
+        <PackageTags>aws s3 storage server</PackageTags>
+        <PackageProjectUrl>https://github.com/Scartzz/S3CryptProxy</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Scartzz/S3CryptProxy</RepositoryUrl>
+        <RepositoryType>Github</RepositoryType>
+        <PackageIconUrl>https://avatars.githubusercontent.com/u/28776685</PackageIconUrl>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+        <IncludeSymbols>True</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="..\..\LICENSE.md">
+            <Pack>True</Pack>
+            <PackagePath>\</PackagePath>
+        </None>
+        <None Include="..\..\README.md">
+            <Pack>True</Pack>
+            <PackagePath>\</PackagePath>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\LICENSE.md">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Include="..\..\README.md">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\S3CryptProxy.Shared\S3CryptProxy.Shared.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="S3CryptProxy.Shared"/>
+        <InternalsVisibleTo Include="S3CryptProxy.Handler"/>
+        <InternalsVisibleTo Include="S3CryptProxy.Server"/>
+    </ItemGroup>
+    
+</Project>
